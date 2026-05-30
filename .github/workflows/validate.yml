@@ -1,0 +1,30 @@
+name: Validate compose
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - develop
+  pull_request:
+    branches:
+      - main
+      - staging
+      - develop
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Validate YAML syntax
+        run: python3 -c "import yaml, sys; yaml.safe_load(open('docker-compose.yml')); print('docker-compose.yml: valid')"
+      - name: Validate compose spec
+        run: docker compose config --quiet
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+          STELLAR_AUTH_JWT_SECRET: ci-placeholder-pad-to-32-chars-ok
+          STELLAR_HTTP_CORS_ORIGIN: http://localhost:3000
