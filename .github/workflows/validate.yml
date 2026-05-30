@@ -19,7 +19,8 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Validate YAML syntax
-        run: python3 -c "import yaml, sys; yaml.safe_load(open('docker-compose.yml')); print('docker-compose.yml: valid')"
+        run: |
+          python3 -c "import yaml; yaml.safe_load(open('docker-compose.yml'))"
       - name: Validate compose spec
         run: docker compose config --quiet
         env:
