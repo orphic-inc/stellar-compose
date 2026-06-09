@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   api:
     image: ghcr.io/orphic-stellar-api:latest
@@ -38,7 +37,7 @@ services:
     networks:
       - internal
     volumes:
-      - ./volumes/db-data:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
@@ -47,3 +46,5 @@ services:
 networks:
   public:
   internal:
+volumes:
+  db-data:
