@@ -1,36 +1,42 @@
 # Stellar Compose
 
-This is a Docker compose file which ties together the API and UI for Stellar.
+Docker Compose orchestration for the Stellar platform — ties together [stellar-api](https://github.com/orphic-inc/stellar-api) and [stellar-ui](https://github.com/orphic-inc/stellar-ui) as git submodules with a Postgres database.
+
+For day-to-day feature development you don't need compose — run api and ui independently. Compose is for integration testing and production deploys. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full cross-repo workflow.
 
 ## Quick Start
-
-Make sure you have the following installed and working:
-
-- Docker
-- Git
-
-The following commands will set up a new development environment using Docker.
 
     git clone https://github.com/orphic-inc/stellar-compose stellar
     cd stellar
     git submodule update --init --recursive
 
-Now, edit `.env.api` and replace all relevant configuration. Refer to [API](https://github.com/orphic-inc/stellar-api) documentation on the keys and values. Then, edit `.env.ui` and do the same with the [UI](https://github.com/orphic-inc/stellar-api) documentation. Finally, run the following to start Stellar:
+Copy and fill in the three environment files:
+
+    cp api/.env.default .env.api   # stellar-api config — see api/CLAUDE.md for variables
+    cp api/.env.default .env.ui    # stellar-ui config (STELLAR_API_URL, etc.)
+    # create .env.db with POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
+
+Then start the stack:
 
     docker compose up --build -d
 
 ## TLS
 
-In order to provide an HTTPS endpoint, you must provide the proxy container with certificates. These can come from [LetsEncrypt](https://letsencrypt.org/) or a commercial certificate issuer.
+To serve HTTPS, provide certificates in `./volumes/proxy-certs`:
 
-1. Place the following files in `./volumes/proxy-certs`
+- `cert.pem` — domain certificate
+- `privkey.pem` — private key
+- `chain.pem` — intermediate + root CA chain
 
-    * `cert.pem` - Your domain certificate
-    * `privkey.pem` - Private key used to generate the certificate
-    * `chain.pem` - Intermediate and Root CA certificate chain
-
-2. Uncomment the `proxy-tls.nginx.conf` volume mapping and comment the default config mapping in `docker-compose.yml`.
+Then swap the nginx config in `docker-compose.yml`: comment `proxy.nginx.conf`, uncomment `proxy-tls.nginx.conf`.
 
 ## Docker Images
 
-If you would prefer to use a tagged image, comment/uncomment `build` and `image` lines in `docker-compose.yml` to switch between locally built and remotely downloaded images. The `latest` tag represents the `main` branch of each repo, and tagged versions are available by their version number, e.g. `v1.0.0`.
+Published images are hosted on GHCR. The repos are trunk-only — images are published from `main` and from version tags:
+
+| Image tag | Source |
+|---|---|
+| `:latest` | `main` (latest commit) |
+| `:0.5.3` | tag `v0.5.3` |
+
+`docker-compose.yml` uses `:latest` by default. To pin a release, edit the `image:` lines to a version tag, or comment/uncomment the `build:` lines to build from local submodule source instead of pulling a published image.
