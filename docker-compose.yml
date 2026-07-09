@@ -1,8 +1,11 @@
 version: "3.9"
 services:
   api:
-    image: ghcr.io/orphic-stellar-api:latest
-    build: ./api
+    # Pin a published semver, not :latest (ADR-0027). Bump this to promote a
+    # release; roll back by reverting the pin. To build locally instead,
+    # comment `image:` and uncomment `build:`.
+    image: ghcr.io/orphic-inc/stellar-api:0.6.9
+    # build: ./api
     restart: always
     env_file:
       - .env.api
@@ -12,8 +15,10 @@ services:
     networks:
       - internal
   ui:
-    image: ghcr.io/orphic/stellar-ui:latest
-    build: ./ui
+    # 0.6.3 is the latest published stellar-ui image; bump to 0.6.9 once the
+    # ui release cut catches up to the api (version parity). See ADR-0027.
+    image: ghcr.io/orphic-inc/stellar-ui:0.6.3
+    # build: ./ui
     restart: always
     env_file:
       - .env.ui
