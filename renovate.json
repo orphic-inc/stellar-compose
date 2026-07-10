@@ -1,0 +1,30 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":dependencyDashboard", "schedule:weekly"],
+  "prConcurrentLimit": 5,
+  "packageRules": [
+    {
+      "description": "Pin GitHub Action digests fresh; safe to automerge",
+      "matchManagers": ["github-actions"],
+      "automerge": true
+    },
+    {
+      "description": "Base images: review every bump (ADR-0001 / api#99 class)",
+      "matchDatasources": ["docker"],
+      "automerge": false,
+      "groupName": null
+    },
+    {
+      "description": "Stellar release pins (ghcr.io/orphic-inc/*): PR always opened, never automerged — bumping a release pin is a deploy decision (ADR-0027)",
+      "matchPackageNames": ["ghcr.io/orphic-inc/stellar-api", "ghcr.io/orphic-inc/stellar-ui"],
+      "automerge": false,
+      "groupName": "stellar release pins"
+    },
+    {
+      "description": "Major bumps always reviewed",
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    }
+  ],
+  "lockFileMaintenance": { "enabled": true, "automerge": true }
+}
