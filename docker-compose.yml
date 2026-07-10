@@ -15,9 +15,9 @@ services:
     networks:
       - internal
   ui:
-    # 0.6.3 is the latest published stellar-ui image; bump to 0.6.9 once the
-    # ui release cut catches up to the api (version parity). See ADR-0027.
-    image: ghcr.io/orphic-inc/stellar-ui:0.6.3
+    # Pinned to the latest published stellar-ui image (version parity with
+    # the api, per ADR-0027).
+    image: ghcr.io/orphic-inc/stellar-ui:0.6.9
     # build: ./ui
     restart: always
     env_file:
