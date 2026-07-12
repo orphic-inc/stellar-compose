@@ -36,7 +36,10 @@ services:
       - ./proxy.nginx.conf:/etc/nginx/nginx.conf:ro,Z
       # - ./proxy-tls.nginx.conf:/etc/nginx/nginx.conf:ro,Z
   db:
-    image: postgres:16-alpine
+    # Pinned — the `-alpine` suffix floats the distro, the same drift class that
+    # broke the api Prisma engine (ADR-0001). 16.9 is the current postgres 16
+    # patch; bump deliberately via a reviewed PR, never back to a floating tag.
+    image: postgres:16.9-alpine3.22
     restart: always
     env_file:
       - .env.db
