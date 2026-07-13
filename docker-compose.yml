@@ -36,7 +36,7 @@ services:
       - ./proxy.nginx.conf:/etc/nginx/nginx.conf:ro,Z
       # - ./proxy-tls.nginx.conf:/etc/nginx/nginx.conf:ro,Z
   db:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     restart: always
     env_file:
       - .env.db
