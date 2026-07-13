@@ -4,7 +4,7 @@ services:
     # Pin a published semver, not :latest (ADR-0027). Bump this to promote a
     # release; roll back by reverting the pin. To build locally instead,
     # comment `image:` and uncomment `build:`.
-    image: ghcr.io/orphic-inc/stellar-api:0.6.9
+    image: ghcr.io/orphic-inc/stellar-api:0.7.0
     # build: ./api
     restart: always
     env_file:
