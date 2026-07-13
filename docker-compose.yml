@@ -42,8 +42,12 @@ services:
       - .env.db
     networks:
       - internal
+    # 18+ images expect a single mount at /var/lib/postgresql (not .../data)
+    # and place data in a major-version-specific subdirectory themselves; see
+    # https://github.com/docker-library/postgres/pull/1259. Mounting at
+    # .../data directly makes the entrypoint refuse to start.
     volumes:
-      - ./volumes/db-data:/var/lib/postgresql/data
+      - ./volumes/db-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
