@@ -34,7 +34,7 @@ CI in each service repo publishes images on push to `main` (`:latest`) and on ve
 
 | Use | image line |
 |---|---|
-| Production / staging | `image: ghcr.io/orphic-inc/stellar-api:0.6.9` (pinned semver) |
+| Production / staging | `image: ghcr.io/orphic-inc/stellar-api:0.8.0` (pinned semver) |
 | Local build from submodule source | comment `image:`, uncomment `build: ./api` |
 | Throwaway "track main" (never prod) | `:latest` |
 

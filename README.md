@@ -59,7 +59,7 @@ A fresh instance is **not usable until two one-time steps are done**:
 Production runs **pulled, pinned images** — not local builds and not `:latest`. In `docker-compose.yml`, each service has an `image:` line pinned to a published semver and a commented `build:` line:
 
 ```yaml
-image: ghcr.io/orphic-inc/stellar-api:0.6.9
+image: ghcr.io/orphic-inc/stellar-api:0.8.0
 # build: ./api
 ```
 
