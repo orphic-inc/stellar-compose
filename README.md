@@ -23,9 +23,12 @@ Prerequisites: **Docker** and **Git**.
 git clone https://github.com/orphic-inc/stellar-compose stellar
 cd stellar
 git submodule update --init --recursive
+cp .env.example .env && cp .env.api.example .env.api && cp .env.ui.example .env.ui && cp .env.db.example .env.db
 ```
 
-Edit `.env.api`, `.env.ui`, and `.env.db` — replace the `changeme` placeholders (see the [API](https://github.com/orphic-inc/stellar-api) and [UI](https://github.com/orphic-inc/stellar-ui) docs for the keys). At minimum set `STELLAR_AUTH_JWT_SECRET` (32+ chars) and the database credentials. Then build and start:
+The real `.env*` files are gitignored — only the `.example` templates are tracked, so a live secret can never be committed to this public repo.
+
+Edit `.env.api`, `.env.ui`, and `.env.db` — replace the `changeme` placeholders (see the [API](https://github.com/orphic-inc/stellar-api) and [UI](https://github.com/orphic-inc/stellar-ui) docs for the keys). At minimum set `STELLAR_AUTH_JWT_SECRET` (generate one with `openssl rand -hex 32`) and the database credentials. Then build and start:
 
 ```bash
 docker compose up --build -d
