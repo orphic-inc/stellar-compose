@@ -92,5 +92,5 @@ When multiple stellar-api feature branches change response shapes simultaneously
 
 - Compose PRs that change `docker-compose.yml` must describe which service changed and why.
 - Submodule-bump and image-pin PRs should reference the API/UI PR(s) or release they incorporate.
-- Environment variable additions must mirror `api/.env.default` (or `ui/.env.example`) and be documented here and in `CLAUDE.md`.
-- Never commit a real secret — the committed `.env.*` files carry `changeme` placeholders; keep live values in your local copies only.
+- Environment variable additions must mirror `api/.env.default` (or `ui/.env.example`), be added to the matching `.env.*.example` template with a `changeme` placeholder, and be documented here and in `CLAUDE.md`.
+- Never commit a real secret. Only `.env.*.example` templates are tracked; the real `.env*` files are gitignored, so live values stay in your local copies and cannot reach this public repo.

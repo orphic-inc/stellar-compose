@@ -1,2 +1,8 @@
 volumes/
 docker-compose.override.yml
+
+# Real env files carry deployment secrets (JWT signing key, DB password) and
+# this repo is public — only the .example templates are tracked.
+.env
+.env.*
+!*.example

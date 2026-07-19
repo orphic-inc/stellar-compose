@@ -9,7 +9,8 @@ stellar-compose/
   api/   → git submodule → orphic-inc/stellar-api  (pinned SHA)
   ui/    → git submodule → orphic-inc/stellar-ui   (pinned SHA)
   docker-compose.yml
-  .env.api   .env.ui   .env.db
+  .env.api   .env.ui   .env.db          (gitignored; created from the .example templates)
+  .env.api.example   .env.ui.example   .env.db.example
 ```
 
 After cloning, initialize submodules:
@@ -57,7 +58,9 @@ You usually don't need compose for day-to-day development:
 | `.env.ui` | stellar-ui env vars (copy from `ui/.env.example`) |
 | `.env.db` | Postgres credentials (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`) |
 
-`.env.api` must set at minimum `STELLAR_PSQL_URI`, `STELLAR_AUTH_JWT_SECRET`, `STELLAR_HTTP_CORS_ORIGIN`. The full variable reference is [api `docs/README.md`](https://github.com/orphic-inc/stellar-api/blob/main/docs/README.md#environment-reference) (and `api/.env.default`). Keep a live secret only in your local `.env.api` — the committed copy stays `changeme`.
+`.env.api` must set at minimum `STELLAR_PSQL_URI`, `STELLAR_AUTH_JWT_SECRET`, `STELLAR_HTTP_CORS_ORIGIN`. The full variable reference is [api `docs/README.md`](https://github.com/orphic-inc/stellar-api/blob/main/docs/README.md#environment-reference) (and `api/.env.default`).
+
+Only the `.example` templates are tracked; the real `.env*` files are gitignored, so this public repo cannot carry a live secret. Create them with `cp .env.api.example .env.api` (and the same for `.env`, `.env.ui`, `.env.db`), then fill in real values locally. When you add a variable, add it to the matching `.example` with a `changeme` placeholder.
 
 ## Commands
 
