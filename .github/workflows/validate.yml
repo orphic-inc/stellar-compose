@@ -21,6 +21,15 @@ jobs:
       - name: Validate YAML syntax
         run: |
           python3 -c "import yaml; yaml.safe_load(open('docker-compose.yml'))"
+      - name: Create env files from templates
+        # Only the .env.*.example templates are tracked; the real files are
+        # gitignored. `docker compose config` resolves every `env_file:` target
+        # on disk, so recreate them exactly as the README's setup step does —
+        # which also keeps CI honest about the documented path working.
+        run: |
+          for f in .env .env.api .env.db .env.ui; do
+            cp "$f.example" "$f"
+          done
       - name: Validate compose spec
         run: docker compose config --quiet
         env:
