@@ -1,6 +1,8 @@
 [submodule "api"]
 	path = api
 	url = git@github.com:orphic-inc/stellar-api.git
+	branch = v0.8.1
 [submodule "ui"]
 	path = ui
 	url = git@github.com:orphic-inc/stellar-ui.git
+	branch = v0.8.1

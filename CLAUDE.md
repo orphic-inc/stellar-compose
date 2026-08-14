@@ -19,15 +19,17 @@ After cloning, initialize submodules:
 git submodule update --init --recursive
 ```
 
-To pull the latest upstream commit for a submodule:
+Each submodule tracks a **release tag**, named in `.gitmodules` as `branch = v<semver>`, and that tag matches the image pinned in `docker-compose.yml`. Renovate keeps both moving together in one PR (`stellar release pins`), so you should not normally bump a submodule by hand. To do it anyway:
 
 ```bash
-git submodule update --remote api   # or ui
+git submodule update --remote api   # moves to the tag in .gitmodules, not to main
 git add api                         # records the new SHA
-git commit -m "chore: bump api submodule to <short-sha>"
+git commit -m "chore: bump api submodule to <tag>"
 ```
 
-Submodules are pinned to exact SHAs; the recorded SHA in `.gitmodules` and the index is what matters. The submodule pin only affects the `build:` (local-build) path — a **pulled** deploy uses the `image:` tag, not the submodule. When you do bump the api submodule, pin a **current** commit (post the self-migrating entrypoint, stellar-api #276) — an old pin regresses local builds to manual migrations.
+Note `--remote` follows that tag, so it will *not* pull the tip of `main`; to test against unreleased api work, check the submodule out at a SHA directly.
+
+The recorded SHA in the index is what actually builds. The pin only affects the `build:` (local-build) path — a **pulled** deploy uses the `image:` tag, not the submodule — which is exactly why drift here is easy to miss: nothing fails until someone builds locally. Keep the pin **current** (post the self-migrating entrypoint, stellar-api #276); an old pin regresses local builds to manual migrations.
 
 ## Images: pin a semver, don't ship `:latest`
 
