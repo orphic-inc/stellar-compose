@@ -4,6 +4,7 @@
   "extends": ["config:recommended", ":dependencyDashboard", "schedule:weekly"],
   "prConcurrentLimit": 5,
   "platformAutomerge": false,
+  "git-submodules": { "enabled": true },
   "packageRules": [
     {
       "description": "Pin GitHub Action digests fresh; safe to automerge",
@@ -21,6 +22,12 @@
       "matchPackageNames": ["ghcr.io/orphic-inc/stellar-api", "ghcr.io/orphic-inc/stellar-ui"],
       "automerge": false,
       "groupName": "stellar release pins"
+    },
+    {
+      "description": "api/ui submodule pointers follow the release tag named in .gitmodules `branch`, grouped with the image pins so one PR moves both. A submodule that drifts from the image it is supposed to correspond to is a local-build trap, not a visible failure. Never automerged — moving a release pin is a deploy decision (ADR-0027)",
+      "matchManagers": ["git-submodules"],
+      "groupName": "stellar release pins",
+      "automerge": false
     },
     {
       "description": "Major bumps always reviewed",
