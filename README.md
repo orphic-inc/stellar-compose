@@ -38,18 +38,13 @@ This builds the API and UI from the submodules. For a **pulled-image** deploymen
 
 ## First-run setup (required)
 
-A fresh instance is **not usable until two one-time steps are done**:
+A fresh instance needs **one** one-time step. Schema and baseline data are both handled for you:
 
-1. **Schema** — applied automatically. The api container self-migrates on boot: its entrypoint runs `prisma migrate deploy` before starting (stellar-api #276), so you never run migrations by hand.
-2. **Seed defaults** — **not automatic yet.** The entrypoint applies migrations but does **not** plant the default user ranks, forums, Golden Rules, System user, or stylesheet fixtures. Until they exist the app can't assign ranks or show forums. Seed them once against the running database:
+1. **Schema and seed data** — applied automatically, in that order, every boot. The api entrypoint runs `prisma migrate deploy` and then an idempotent `seed.js`, so migrations, default user ranks, forums, Golden Rules, the System user, and the stylesheet fixtures are all in place before the API starts serving (stellar-api #276). Nothing to run by hand.
 
-   ```bash
-   docker compose exec api npm run db:seed
-   ```
+   The seed is a no-op on an already-seeded database, and the entrypoint is fail-fast: if either step errors the container exits non-zero and `restart: always` retries, rather than serving against a schema-behind or unseeded database.
 
-   > Wiring an idempotent seed into first boot is a tracked follow-up (see [Known rough edges](#known-rough-edges)); until then this is a manual step on a new instance.
-
-3. **Create the first admin** — the API is 503-walled on `/api/*` until the one-time install mints the first SysOp (stellar-api ADR-0022). Open the site and complete the install form, or POST directly:
+2. **Create the first admin** — the API is 503-walled on `/api/*` until the one-time install mints the first SysOp (stellar-api ADR-0022). Open the site and complete the install form, or POST directly:
 
    ```bash
    curl -X POST https://<your-host>/api/install \
@@ -62,7 +57,7 @@ A fresh instance is **not usable until two one-time steps are done**:
 Production runs **pulled, pinned images** — not local builds and not `:latest`. In `docker-compose.yml`, each service has an `image:` line pinned to a published semver and a commented `build:` line:
 
 ```yaml
-image: ghcr.io/orphic-inc/stellar-api:0.8.1
+image: ghcr.io/orphic-inc/stellar-api:0.8.2
 # build: ./api
 ```
 
@@ -70,7 +65,7 @@ image: ghcr.io/orphic-inc/stellar-api:0.8.1
 - **Roll back** — revert the pin to the previous tag and `pull && up -d` again. Because the pin is tracked in git, a deploy and its rollback are both reviewable commits (ADR-0027).
 - **Never pin `:latest` in production** — it makes deploys non-reproducible and rollbacks impossible.
 
-Published tags live at `ghcr.io/orphic-inc/stellar-api` and `ghcr.io/orphic-inc/stellar-ui`. (Version parity between api and ui is a work in progress — pin each to its own latest published tag.)
+Published tags live at `ghcr.io/orphic-inc/stellar-api` and `ghcr.io/orphic-inc/stellar-ui`. The two move together: Renovate groups them as `stellar release pins`, so a release opens one PR bumping both, and the `api/` and `ui/` submodule pointers travel in that same PR. A tag in this repo names the stack that pair forms — see [CHANGELOG.md](CHANGELOG.md).
 
 > **Destructive migrations — read before a major upgrade.** The api self-migrates on boot with `prisma migrate deploy`. Stellar uses an **expand → contract** discipline (stellar-api ADR-0027): a migration that drops or rewrites columns ships one release *after* the code that stopped needing the old shape. Do not skip intermediate releases across a known destructive migration, and take a backup first (below). Running more than one api replica through a destructive migration is not yet safe — see [Known rough edges](#known-rough-edges).
 
@@ -101,6 +96,5 @@ Stellar runs fully without IRC. The korin integration is inert until you set its
 
 ## Known rough edges
 
-- **Seeding is a manual first-run step** (above) — an idempotent seed-on-first-boot is not yet wired into the entrypoint.
 - **Multi-replica migration safety** — the self-migrating entrypoint races if more than one api replica starts simultaneously against an unmigrated database ([issue #10](https://github.com/orphic-inc/stellar-compose/issues/10)). Single-replica deploys are unaffected.
 - **Boot smoke test** — CI validates `docker compose config` but does not yet build-and-boot the stack ([issue #7](https://github.com/orphic-inc/stellar-compose/issues/7)); that gap is how the malformed image references (fixed in this pass) went unnoticed.
