@@ -71,7 +71,6 @@ docker compose up --build -d   # build from submodule source and start
 docker compose up -d           # start using pulled/cached images
 docker compose logs -f api     # tail api logs
 docker compose exec api sh     # shell into the api container
-docker compose exec api npm run db:seed   # seed default ranks/forums (first run — see README)
 docker compose down            # stop and remove containers (data volume persists)
 docker compose down -v         # also wipe the db-data volume
 ```
