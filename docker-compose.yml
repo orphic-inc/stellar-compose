@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   api:
     # Pin a published semver, not :latest (ADR-0027). Bump this to promote a
