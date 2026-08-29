@@ -1,7 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "platformAutomerge is off deliberately: GitHub native auto-merge ignores the branch-protection app-bypass, so Renovate merges its own automerge PRs directly as the app (the bypass on `main` covers the Renovate app). Required human review stays for everything else; the `validate` required check still gates every merge.",
-  "extends": ["config:recommended", ":dependencyDashboard", "schedule:weekly"],
+  "description": [
+    "platformAutomerge is off deliberately: GitHub native auto-merge ignores the branch-protection app-bypass, so Renovate merges its own automerge PRs directly as the app (the bypass on `main` covers the Renovate app). Required human review stays for everything else; the `validate` required check still gates every merge.",
+    "schedule:weekends rather than schedule:weekly: weekly resolves to schedule:earlyMondays, which is the cron `* 0-3 * * 1` — a four-hour window, once a week. Renovate only opens PRs if a run happens to land inside it, and on a repo this quiet the runs do not. Weekends (`* * * * 0,6`) is a 48-hour window and still keeps PR noise off working hours; prConcurrentLimit caps the batch."
+  ],
+  "extends": ["config:recommended", ":dependencyDashboard", "schedule:weekends"],
   "prConcurrentLimit": 5,
   "platformAutomerge": false,
   "git-submodules": { "enabled": true },
