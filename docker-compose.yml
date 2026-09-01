@@ -3,7 +3,7 @@ services:
     # Pin a published semver, not :latest (ADR-0027). Bump this to promote a
     # release; roll back by reverting the pin. To build locally instead,
     # comment `image:` and uncomment `build:`.
-    image: ghcr.io/orphic-inc/stellar-api:0.8.2
+    image: ghcr.io/orphic-inc/stellar-api:0.9.0
     # build: ./api
     restart: always
     env_file:
@@ -16,7 +16,7 @@ services:
   ui:
     # Pinned to the latest published stellar-ui image (version parity with
     # the api, per ADR-0027).
-    image: ghcr.io/orphic-inc/stellar-ui:0.8.2
+    image: ghcr.io/orphic-inc/stellar-ui:0.9.0
     # build: ./ui
     restart: always
     env_file:
