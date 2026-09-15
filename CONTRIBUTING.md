@@ -54,7 +54,14 @@ Order matters: API merges first, UI types regenerate against the merged spec, th
 
 1. In stellar-api, cut a version tag on `main` — CI publishes `ghcr.io/orphic-inc/stellar-api:<semver>` and refreshes `:latest`.
 2. Repeat for stellar-ui.
-3. In stellar-compose, point the `image:` pins at the new **semver** (not `:latest`), bump the submodule pins to the tagged commits, and tag compose itself:
+3. **Check the pair before pinning it.** Renovate's grouped "stellar release pins" PR takes the newest tag of each repo independently, so when api releases ahead of ui it pairs an api with a ui that has not caught up. Read which api contract the ui tag was built against:
+   ```bash
+   gh api -H 'Accept: application/vnd.github.raw' \
+     'repos/orphic-inc/stellar-ui/contents/src/types/openapi.json?ref=v<ui-version>' \
+     | jq -r .info.version
+   ```
+   If it equals the api pin, the pair is sound. If it is older, diff that api tag's `openapi.json` against the pin's. Hold the api pin back if the diff removes an operation, schema, property or enum value, or newly requires a request field. A response field that becomes required is safe, because an older ui ignores it. Record the result in the pin PR (#49 is the worked example).
+4. In stellar-compose, point the `image:` pins at the new **semver** (not `:latest`), bump the submodule pins to the tagged commits, and tag compose itself:
    ```bash
    # Edit docker-compose.yml:  image: ghcr.io/orphic-inc/stellar-api:0.6.9  etc.
    git add docker-compose.yml api ui

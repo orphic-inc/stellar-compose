@@ -17,7 +17,18 @@ version and is deliberately left untagged rather than given an invented number.
 
 ## [Unreleased]
 
-Nothing pending. The last change was the 0.8.2 pin.
+### Added
+
+- `CONTRIBUTING.md`'s release workflow has a pairing check to run before
+  pinning ([#49](https://github.com/orphic-inc/stellar-compose/issues/49)).
+  Renovate's grouped pin PR takes each repo's newest tag independently, so it
+  can pair an api with a ui that has not caught up to its contract. The step
+  reads which api contract the ui tag vendors and names the diffs that must hold
+  the api pin back.
+- `.env.api.example` lists the api's 0.9.x settings, commented out at their
+  defaults: `STELLAR_IRC_GUIDE_URL`, `STELLAR_TRUST_PROXY_HOPS`, and the
+  inactivity, invite handout, invite expiry and ratio policy job dials. Both
+  `*_MODE` switches ship `off`. Nothing changes for an existing `.env.api`.
 
 ## [0.8.2] — 2026-08-14
 
