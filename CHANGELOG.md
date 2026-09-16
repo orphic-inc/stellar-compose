@@ -17,6 +17,38 @@ version and is deliberately left untagged rather than given an invented number.
 
 ## [Unreleased]
 
+## [0.9.5] — 2026-09-16
+
+Stack: **api 0.9.5 + ui 0.9.5**
+
+### Changed
+
+- Both service pins move to **0.9.5**, and the `api` and `ui` submodules to the
+  matching release tags. This releases the hold from
+  [#49](https://github.com/orphic-inc/stellar-compose/issues/49), which kept the
+  api at `0.9.4` because api `0.9.5` made `reason` required on
+  `POST /ratio-policy/{userId}/override` while the pinned ui `0.9.3` still sent
+  `status` alone. stellar-ui `0.9.5` carries that fix
+  ([stellar-ui#332](https://github.com/orphic-inc/stellar-ui/issues/332)).
+
+  The pairing check from `CONTRIBUTING.md` was run against the real tag before
+  pinning: ui `v0.9.5` vendors api contract **0.9.5**, equal to the api pin, so
+  the pair is sound and there is no diff to weigh.
+
+  stellar-ui has no `0.9.4`. Its patch moved two so that both pins name the same
+  release and this commit is a stack version — an unequal pair is left untagged
+  here rather than given an invented number, and stellar-ui's ADR-0004 makes its
+  patch digit that repo's own cadence, so the skip costs nothing there.
+
+- **Recorded late:** `f4ec15b` moved the stack off **0.8.2** — the api pin to
+  `0.9.4`, the ui pin to `0.9.3`, and both submodules to match. That deploy
+  reached this file only now, found while preparing this release. It is noted
+  under 0.9.5 because that is when it was written down, not when it happened;
+  the pair it created was unequal, so it was never a tagged stack version and
+  gets no section of its own. Nothing here gates a pin change on a CHANGELOG
+  entry, which is why it was missed —
+  [#51](https://github.com/orphic-inc/stellar-compose/issues/51) tracks that.
+
 ### Added
 
 - `CONTRIBUTING.md`'s release workflow has a pairing check to run before
