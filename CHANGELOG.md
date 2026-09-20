@@ -17,6 +17,49 @@ version and is deliberately left untagged rather than given an invented number.
 
 ## [Unreleased]
 
+## [0.9.6] — 2026-09-20
+
+Stack: **api 0.9.6 + ui 0.9.6**
+
+### Changed
+
+- Both service pins move to **0.9.6**, and the `api` and `ui` submodules to the
+  matching release tags. No hold preceded this one: api `0.9.6` and ui `0.9.6`
+  were cut and tagged the same day, in that order, so the pair was equal from
+  the moment both tags existed.
+
+  The pairing check from `CONTRIBUTING.md` was run against the real tags before
+  pinning: ui `v0.9.6` vendors api contract **0.9.6**, equal to the api pin, so
+  the pair is sound and there is no diff to weigh. Stronger than usual here —
+  api's `openapi.json` and ui's vendored copy were verified **byte-identical**,
+  `info.version` included, before either tag was pushed.
+
+  Both images were confirmed published from their tag runs rather than by an
+  anonymous GHCR manifest check, which cannot distinguish an absent tag from a
+  private one.
+
+  The stack ships the Member Feed end to end
+  ([stellar-api#262](https://github.com/orphic-inc/stellar-api/issues/262)) —
+  four tokenized RSS feeds and the settings surface that hands out their URLs —
+  along with the ratio policy's member-facing half, addressable homepage news
+  anchors, and a fix for empty environment values that had broken every absolute
+  link the API builds
+  ([stellar-api#667](https://github.com/orphic-inc/stellar-api/issues/667)).
+  Operators copying `.env.api.example` should note that an empty
+  `STELLAR_SITE_URL` or `STELLAR_HTTP_CORS_ORIGIN` now reads as unset rather
+  than as an empty setting, and that a trailing slash on either is stripped.
+
+### Fixed
+
+- The compare-link footer, which named no release after `0.8.2`. The `[0.9.5]`
+  link was never added when that stack was tagged, and `[Unreleased]` still
+  spanned from `v0.8.2`, so both links pointed at the wrong range for a release.
+  Restored, with `[0.9.6]` added. The same omission happened in stellar-ui at
+  its own `0.9.5` cut and was repaired there in the same release, which makes it
+  a gap in the procedure rather than a one-off slip —
+  [#51](https://github.com/orphic-inc/stellar-compose/issues/51) already tracks
+  the absence of a gate over this file.
+
 ## [0.9.5] — 2026-09-16
 
 Stack: **api 0.9.5 + ui 0.9.5**
@@ -141,7 +184,9 @@ release.
 
 - Migrated the database service to PostgreSQL and made ports consistent.
 
-[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.8.2...HEAD
+[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.6...HEAD
+[0.9.6]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.5...v0.9.6
+[0.9.5]: https://github.com/orphic-inc/stellar-compose/compare/v0.8.2...v0.9.5
 [0.8.2]: https://github.com/orphic-inc/stellar-compose/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/orphic-inc/stellar-compose/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/orphic-inc/stellar-compose/compare/v0.6.9...v0.8.0
