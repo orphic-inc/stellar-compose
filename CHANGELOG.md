@@ -17,6 +17,54 @@ version and is deliberately left untagged rather than given an invented number.
 
 ## [Unreleased]
 
+## [0.9.7] — 2026-09-23
+
+Stack: **api 0.9.7 + ui 0.9.7**
+
+**Upgrade note: this stack is the exception to "reverting the pin is the
+rollback". Back up the database before deploying it.** api 0.9.7 runs three
+migrations that 0.9.6 cannot run against:
+
+- `user_settings.paranoia` is dropped
+  ([stellar-api#586](https://github.com/orphic-inc/stellar-api/issues/586)).
+- `contributors.communityId` is dropped
+  ([stellar-api#709](https://github.com/orphic-inc/stellar-api/issues/709)).
+- Tag names are normalized, which merges and deletes duplicate tags
+  ([stellar-api#689](https://github.com/orphic-inc/stellar-api/issues/689)).
+
+The api 0.9.6 image selects both dropped columns, so reverting this pin would
+boot it against a schema it cannot read. Rolling back past 0.9.7 means restoring
+the pre-deploy backup and then reverting the pin. See
+[Backup & restore](README.md#backup--restore).
+
+### Changed
+
+- Both service pins move to **0.9.7**, and the `api` and `ui` submodules to the
+  matching release tags (`0edb408`, `4e7b29b`). api was cut and tagged first,
+  then ui re-vendored against the merged spec and was tagged the same day.
+
+  The pairing check from `CONTRIBUTING.md` was run against the real tags: ui
+  `v0.9.7` vendors api contract **0.9.7**, equal to the api pin. api's
+  `openapi.json` and ui's vendored copy at the two tags are **byte-identical**.
+
+  Both images were confirmed published by their tag runs (`publish` and
+  `release` succeeded in both repos), not by an anonymous GHCR manifest check.
+
+  The stack ships contribution notification filters
+  ([stellar-api#263](https://github.com/orphic-inc/stellar-api/issues/263)),
+  off by default until staff raise a rank's `notificationFilterLimit` above
+  `0`. It also ships a curated tag vocabulary
+  ([stellar-api#298](https://github.com/orphic-inc/stellar-api/issues/298)) and
+  privacy as five settable checkboxes
+  ([stellar-api#586](https://github.com/orphic-inc/stellar-api/issues/586),
+  [stellar-ui#367](https://github.com/orphic-inc/stellar-ui/issues/367)). On
+  the access side, comment threads and contributions now follow the visibility
+  of the page they belong to, a personal collage is readable by any member, and
+  uploading into a private community no longer makes the uploader a member
+  ([stellar-api#709](https://github.com/orphic-inc/stellar-api/issues/709)). On
+  the ui side, the invite link now fills in the invite key, and Sentry no longer
+  receives URL query strings.
+
 ## [0.9.6] — 2026-09-20
 
 Stack: **api 0.9.6 + ui 0.9.6**
@@ -184,7 +232,8 @@ release.
 
 - Migrated the database service to PostgreSQL and made ports consistent.
 
-[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.6...HEAD
+[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.7...HEAD
+[0.9.7]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.6...v0.9.7
 [0.9.6]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.5...v0.9.6
 [0.9.5]: https://github.com/orphic-inc/stellar-compose/compare/v0.8.2...v0.9.5
 [0.8.2]: https://github.com/orphic-inc/stellar-compose/compare/v0.8.1...v0.8.2
