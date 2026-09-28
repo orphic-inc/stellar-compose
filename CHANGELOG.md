@@ -17,6 +17,43 @@ version and is deliberately left untagged rather than given an invented number.
 
 ## [Unreleased]
 
+## [0.9.8] — 2026-09-28
+
+Stack: **api 0.9.8 + ui 0.9.8**
+
+**Upgrade note: back up the database before deploying.** api 0.9.8 runs three
+additive migrations: a `release_artists.addedById` column, a data migration
+that attributes existing artist credits to the member who wrote them
+([stellar-api#722](https://github.com/orphic-inc/stellar-api/issues/722)), and
+four new release history actions. Reverting the pin to 0.9.7 is a rollback
+only until the first credit edit or Freepass / Neutralpass change. Either one
+writes a history row that api 0.9.7 cannot read. After that, rolling back means
+restoring the backup. See [Backup & restore](README.md#backup--restore).
+
+### Changed
+
+- Both service pins move to **0.9.8**, and the `api` and `ui` submodules to the
+  matching release tags (`790a6b8`, `3e694eb`). api was cut and tagged first,
+  then ui re-vendored against the merged spec and was tagged after the api
+  image was published. api's `openapi.json` and ui's vendored copy are
+  byte-identical, and contract coupling stays at 0.9.
+
+  The ui tag is the first to pass the new e2e release gate
+  ([stellar-ui#396](https://github.com/orphic-inc/stellar-ui/issues/396)): its
+  `publish` waits on the Playwright suite run against `stellar-api:0.9.8`.
+
+  The stack ships artist credit editing on an existing release
+  ([stellar-api#721](https://github.com/orphic-inc/stellar-api/issues/721)),
+  Freepass / Neutralpass badges, a staff control and history rows
+  ([stellar-api#732](https://github.com/orphic-inc/stellar-api/issues/732)),
+  notification filters in the ui, and percentile tiles that no longer give away
+  a hidden stat ([stellar-api#723](https://github.com/orphic-inc/stellar-api/issues/723)).
+
+### Fixed
+
+- **The `.gitmodules` `branch =` lines follow the release tag again.** The
+  0.9.7 cut moved the submodule gitlinks but left both lines at `v0.9.6`.
+
 ## [0.9.7] — 2026-09-23
 
 Stack: **api 0.9.7 + ui 0.9.7**
@@ -232,7 +269,8 @@ release.
 
 - Migrated the database service to PostgreSQL and made ports consistent.
 
-[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.7...HEAD
+[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.8...HEAD
+[0.9.8]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.7...v0.9.8
 [0.9.7]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.6...v0.9.7
 [0.9.6]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.5...v0.9.6
 [0.9.5]: https://github.com/orphic-inc/stellar-compose/compare/v0.8.2...v0.9.5
