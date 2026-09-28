@@ -1,0 +1,188 @@
+name: e2e
+
+# The stack as this repo ships it (#57): the pinned stellar-api and stellar-ui
+# images, the ui container's nginx fronting /api/ with proxy.nginx.conf, and
+# the compose Postgres, set up from the .example templates. stellar-ui's
+# Playwright suite runs against it from the `ui` submodule, which `validate`
+# holds at the same tag as the ui image, so the specs are the ones that
+# shipped with it.
+#
+# stellar-ui's own e2e gate runs its dev server against a bare api container,
+# so it never exercises the built bundle, this proxy, the TLS config or this
+# Postgres. A pin bump is the deploy (ADR-0027), so this is the check that the
+# pair works as deployed.
+#
+# Required on every PR. No path filter: a required check that a filter skips
+# never reports, and blocks the PR. No schedule: the pinned images cannot
+# change underneath it.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      # One origin: the proxy serves the bundle and forwards /api/.
+      BASE_URL: http://localhost
+      API_URL: http://localhost
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The specs. With no ssh-key, checkout fetches the git@github.com
+          # submodule URLs over HTTPS.
+          submodules: true
+
+      - name: Create env files from templates, changing only the JWT secret
+        run: |
+          set -euo pipefail
+          for f in .env .env.api .env.db .env.ui; do
+            cp "$f.example" "$f"
+          done
+          # The template's `changeme` is under the api's 32-character minimum,
+          # and the README says to set it. Every other placeholder boots, so
+          # this doubles as proof that the README's minimum setup works: a
+          # future api that makes another variable fatal fails here.
+          sed -i 's#^STELLAR_AUTH_JWT_SECRET=.*#STELLAR_AUTH_JWT_SECRET=ci-only-compose-e2e-jwt-secret-000000#' .env.api
+          removed=$(diff .env.api.example .env.api | grep -c '^<' || true)
+          added=$(diff .env.api.example .env.api | grep -c '^>' || true)
+          if [ "$removed" != 1 ] || [ "$added" != 1 ]; then
+            echo "::error::expected exactly one changed line in .env.api, got -$removed +$added"
+            exit 1
+          fi
+
+      - name: Start the stack
+        id: up
+        run: |
+          set -euo pipefail
+          docker compose up -d
+          # The digests say which images a red run was tested against.
+          for image in $(docker compose config --images | grep '^ghcr.io/orphic-inc/'); do
+            digest=$(docker image inspect "$image" --format '{{index .RepoDigests 0}}')
+            echo "\`$digest\`" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      - name: Wait for the api on a fresh database
+        run: |
+          set -uo pipefail
+          # /health is served at the api's root, which the proxy does not
+          # forward, so ask from inside the api container. db: ok means it
+          # migrated a fresh volume and can query it (#7).
+          for _ in $(seq 1 60); do
+            body=$(docker compose exec -T api wget -qO- http://localhost:8080/health 2>/dev/null) || body=""
+            if [ -n "$body" ]; then
+              echo "$body"
+              echo "$body" | jq -e '.status == "ok" and .db == "ok"' > /dev/null && exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::the api never reported {status: ok, db: ok}"
+          exit 1
+
+      - name: The proxy serves the pinned api and the bundle
+        run: |
+          set -euo pipefail
+          pinned=$(sed -nE 's#^[[:space:]]*image:[[:space:]]*ghcr\.io/orphic-inc/stellar-api:([^[:space:]]+).*#\1#p' docker-compose.yml)
+          served=$(curl -sf "$API_URL/api/version" | jq -r .version)
+          if [ "$served" != "$pinned" ]; then
+            echo "::error::the proxy's /api/version answered '$served', but the pin is $pinned"
+            exit 1
+          fi
+          curl -sf "$BASE_URL/" | grep -q '<div id="root"' \
+            || { echo "::error::$BASE_URL/ did not serve the ui bundle"; exit 1; }
+
+      - name: Install the site and seed the e2e fixtures
+        run: |
+          set -euo pipefail
+          status=$(curl -s -o install.json -w '%{http_code}' -X POST "$API_URL/api/install" \
+            -H 'content-type: application/json' \
+            -d '{"username":"sysop","email":"sysop@example.com","password":"ci-only-sysop-password"}')
+          if [ "$status" != "201" ]; then
+            echo "::error::POST /api/install answered $status"
+            cat install.json
+            exit 1
+          fi
+          # The users, invite tree, open invites and release the specs rely on.
+          docker compose exec -T api node dist/scripts/seed-e2e-users.js
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: ui/.nvmrc
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install the suite and Chromium
+        working-directory: ui
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run the e2e suite
+        working-directory: ui
+        run: npx playwright test
+
+      - name: TLS smoke
+        # Its own signal: it runs whether or not the suite passed.
+        if: ${{ !cancelled() && steps.up.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          # A self-signed certificate where the README says to put a real one.
+          mkdir -p volumes/proxy-certs
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj '/CN=localhost' \
+            -keyout volumes/proxy-certs/privkey.pem -out volumes/proxy-certs/cert.pem 2> /dev/null
+          cp volumes/proxy-certs/cert.pem volumes/proxy-certs/chain.pem
+          # The README's switch: the TLS config in place of the default one.
+          # Compose merges volumes by target, so this replaces that one mount.
+          cat > "$RUNNER_TEMP/tls.override.yml" <<'EOF'
+          services:
+            ui:
+              volumes:
+                - ./proxy-tls.nginx.conf:/etc/nginx/nginx.conf:ro,Z
+          EOF
+          # --force-recreate: nginx reads its config only at start, so a container
+          # compose judged unchanged would keep serving the old one.
+          docker compose -f docker-compose.yml -f "$RUNNER_TEMP/tls.override.yml" up -d --no-deps --force-recreate ui
+          for _ in $(seq 1 30); do
+            curl -skf https://localhost/ > /dev/null && break
+            sleep 1
+          done
+
+          redirect=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' http://localhost/)
+          if [ "$redirect" != "301 https://localhost/" ]; then
+            echo "::error::http://localhost/ answered '$redirect', expected a 301 to https"
+            exit 1
+          fi
+          pinned=$(sed -nE 's#^[[:space:]]*image:[[:space:]]*ghcr\.io/orphic-inc/stellar-api:([^[:space:]]+).*#\1#p' docker-compose.yml)
+          served=$(curl -sk https://localhost/api/version | jq -r .version 2> /dev/null || true)
+          if [ "$served" != "$pinned" ]; then
+            echo "::error::https://localhost/api/version answered '$served', but the pin is $pinned. Is proxy-tls.nginx.conf passing /api/ to the api's port (#58)?"
+            exit 1
+          fi
+          curl -skf https://localhost/ | grep -q '<div id="root"' \
+            || { echo "::error::https://localhost/ did not serve the ui bundle"; exit 1; }
+          echo "TLS: 301 to https, /api/ reaches api $served, bundle served"
+
+      - name: Upload the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ui/playwright-report/
+            ui/test-results/
+          retention-days: 14
+
+      - name: Stack logs on failure
+        if: failure()
+        run: docker compose logs --no-color --tail 150

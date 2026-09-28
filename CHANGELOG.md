@@ -17,6 +17,28 @@ version and is deliberately left untagged rather than given an invented number.
 
 ## [Unreleased]
 
+### Added
+
+- **CI runs the stack as it ships**
+  ([#57](https://github.com/orphic-inc/stellar-compose/issues/57)). A new
+  `e2e` workflow, required on every PR:
+  - starts both pinned images and the compose Postgres from the `.env.*.example`
+    templates, changing only the JWT secret;
+  - waits for the api to report `db: ok` on the fresh database;
+  - checks that the proxy serves the bundle and the pinned api version;
+  - runs stellar-ui's Playwright suite from the `ui` submodule against it;
+  - then swaps in `proxy-tls.nginx.conf` behind a self-signed certificate and
+    checks the redirect, `/api/` and the bundle over HTTPS.
+
+  Nothing in CI started the stack before, which is how a broken TLS config
+  (#58) went unseen. It supersedes the boot smoke test
+  ([#7](https://github.com/orphic-inc/stellar-compose/issues/7)).
+- **`validate` checks that the release pins agree** (#57). For each service,
+  the image tag, the `.gitmodules` `branch` and the gitlink must name the same
+  release. The e2e job relies on it, since it runs the ui gitlink's specs
+  against the ui image. An api pin held back behind the ui warns rather than
+  fails, as CONTRIBUTING's pairing step allows.
+
 ### Fixed
 
 - **The TLS proxy reaches the api again**
