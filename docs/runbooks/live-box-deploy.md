@@ -52,8 +52,8 @@ These four files are gitignored. Keep it that way; they hold live secrets.
 Do this before the first `up -d`. Installing over plaintext means your SysOp password crosses the wire in the clear, and that credential is the one that matters most on the box.
 
 1. Obtain certificates. `certbot certonly --standalone` is simplest while nothing is bound to port 80 yet.
-2. Place `cert.pem`, `privkey.pem`, and `chain.pem` in `./volumes/proxy-certs`.
-3. In `docker-compose.yml`, comment the default config mount and uncomment the `proxy-tls.nginx.conf` mount.
+2. Place `fullchain.pem` as `cert.pem`, and `privkey.pem`, in `./volumes/proxy-certs`. No `chain.pem`: there is no OCSP stapling.
+3. In `docker-compose.yml`, swap the `nginx/site.conf` mount for the commented `nginx/site-tls.conf` line beneath it.
 
 Then bring the stack up:
 

@@ -29,11 +29,14 @@ services:
     networks:
       - internal
       - public
+    # The image's stock nginx.conf stays; these replace only its server block
+    # and add the /api/ proxy beside the bundle snippet the image ships (#58).
     volumes:
-      - ./dhparam:/etc/nginx/dhparam:ro,Z
+      - ./nginx/api-proxy.conf:/etc/nginx/snippets/api-proxy.conf:ro,Z
+      - ./nginx/site.conf:/etc/nginx/conf.d/default.conf:ro,Z
+      # HTTPS: use this line instead of the one above (README, TLS).
+      # - ./nginx/site-tls.conf:/etc/nginx/conf.d/default.conf:ro,Z
       - ./volumes/proxy-certs:/etc/nginx/certs:ro,Z
-      - ./proxy.nginx.conf:/etc/nginx/nginx.conf:ro,Z
-      # - ./proxy-tls.nginx.conf:/etc/nginx/nginx.conf:ro,Z
   db:
     # Pinned to a concrete patch + distro. The `-alpine` suffix floats the
     # distro underneath the tag — the drift class that advanced api's base to
