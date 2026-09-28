@@ -174,7 +174,18 @@ jobs:
           fi
           curl -skf https://localhost/ | grep -q '<div id="root"' \
             || { echo "::error::https://localhost/ did not serve the ui bundle"; exit 1; }
-          echo "TLS: 301 to https, /api/ reaches api $served, bundle served"
+          # A browser refuses a stylesheet served as text/plain, which is what
+          # nginx sends for everything once mime.types is not included (#58).
+          css=$(curl -skf https://localhost/ | grep -oE 'href="/[^"]+\.css"' | head -1 | cut -d'"' -f2)
+          css_type=$(curl -skf -o /dev/null -w '%{content_type}' "https://localhost$css")
+          case "$css_type" in
+            text/css*) ;;
+            *)
+              echo "::error::https://localhost$css was served as '$css_type', not text/css. Does proxy-tls.nginx.conf include mime.types (#58)?"
+              exit 1
+              ;;
+          esac
+          echo "TLS: 301 to https, /api/ reaches api $served, bundle served, CSS as $css_type"
 
       - name: Upload the Playwright report
         if: failure()
