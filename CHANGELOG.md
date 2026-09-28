@@ -48,6 +48,13 @@ version and is deliberately left untagged rather than given an invented number.
   every api request. The plain config moved to 8080 in `cc49127` and the TLS
   one was missed. #58 stays open for the cause: the two configs copy the same
   `/api/` block by hand.
+- **The TLS proxy serves the bundle with its real content types**
+  ([#58](https://github.com/orphic-inc/stellar-compose/issues/58)).
+  `proxy-tls.nginx.conf` did not include `mime.types`, which the plain config
+  does, so nginx sent every file as `text/plain`. Browsers refuse a stylesheet
+  of that type, so a TLS deploy rendered unstyled. The e2e TLS smoke now checks
+  the bundle's CSS arrives as `text/css`. Checking that `/` served HTML had
+  missed this.
 
 ## [0.9.8] — 2026-09-28
 
