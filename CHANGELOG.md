@@ -17,6 +17,16 @@ version and is deliberately left untagged rather than given an invented number.
 
 ## [Unreleased]
 
+### Fixed
+
+- **The TLS proxy reaches the api again**
+  ([#58](https://github.com/orphic-inc/stellar-compose/issues/58)).
+  `proxy-tls.nginx.conf` passed `/api/` to `api:4056`, but the api listens on
+  8080. So a deploy that followed the README's TLS steps answered `502` on
+  every api request. The plain config moved to 8080 in `cc49127` and the TLS
+  one was missed. #58 stays open for the cause: the two configs copy the same
+  `/api/` block by hand.
+
 ## [0.9.8] — 2026-09-28
 
 Stack: **api 0.9.8 + ui 0.9.8**
