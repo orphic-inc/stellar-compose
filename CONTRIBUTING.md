@@ -69,6 +69,11 @@ Order matters: API merges first, UI types regenerate against the merged spec, th
    git tag v0.6.9 && git push origin v0.6.9
    ```
 
+The pin PR must pass two required checks before it merges:
+
+- **`validate`** fails unless each service's image tag, `.gitmodules` `branch` and gitlink name the same release (`scripts/check-release-pins.sh`; run it locally before pushing). An api pin held back under step 3 is a warning there, not a failure.
+- **`e2e`** starts the pinned stack exactly as shipped: both images, the ui container's nginx in front of `/api/`, and the compose Postgres, from the `.env.*.example` templates. It runs stellar-ui's Playwright suite from the `ui` submodule against it, then a TLS smoke on `proxy-tls.nginx.conf` (#57).
+
 Production always runs a pinned semver, never `:latest` — a pin is a reproducible, revertible deploy ([stellar-api ADR-0027](https://github.com/orphic-inc/stellar-api/blob/main/docs/adr/0027-publish-vs-deploy-boundary.md)).
 
 ---

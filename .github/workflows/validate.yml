@@ -14,6 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Release pins agree
+        # Image tag, .gitmodules `branch` and gitlink name one release per
+        # service (#57). e2e runs the ui gitlink's specs against the ui image,
+        # so a disagreement would test one release with another's specs.
+        run: scripts/check-release-pins.sh
       - name: Validate YAML syntax
         run: |
           python3 -c "import yaml; yaml.safe_load(open('docker-compose.yml'))"

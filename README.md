@@ -67,6 +67,8 @@ image: ghcr.io/orphic-inc/stellar-api:0.8.2
 
 Published tags live at `ghcr.io/orphic-inc/stellar-api` and `ghcr.io/orphic-inc/stellar-ui`. The two move together: Renovate groups them as `stellar release pins`, so a release opens one PR bumping both, and the `api/` and `ui/` submodule pointers travel in that same PR. A tag in this repo names the stack that pair forms — see [CHANGELOG.md](CHANGELOG.md).
 
+Every PR, the pin PR included, must pass the required `e2e` check before it merges. It starts the pinned pair exactly as this file ships it, from the `.env.*.example` templates, and runs stellar-ui's Playwright suite against it. It then repeats a smoke check over the TLS config. So a green pin PR means that pair was tested as deployed. See [CONTRIBUTING.md](CONTRIBUTING.md#workflow-3--release).
+
 > **Destructive migrations — read before a major upgrade.** The api self-migrates on boot with `prisma migrate deploy`. Stellar uses an **expand → contract** discipline (stellar-api ADR-0027): a migration that drops or rewrites columns ships one release *after* the code that stopped needing the old shape. Do not skip intermediate releases across a known destructive migration, and take a backup first (below). Running more than one api replica through a destructive migration is not yet safe — see [Known rough edges](#known-rough-edges).
 
 ## Backup & restore
@@ -97,4 +99,3 @@ Stellar runs fully without IRC. The korin integration is inert until you set its
 ## Known rough edges
 
 - **Multi-replica migration safety** — the self-migrating entrypoint races if more than one api replica starts simultaneously against an unmigrated database ([issue #10](https://github.com/orphic-inc/stellar-compose/issues/10)). Single-replica deploys are unaffected.
-- **Boot smoke test** — CI validates `docker compose config` but does not yet build-and-boot the stack ([issue #7](https://github.com/orphic-inc/stellar-compose/issues/7)); that gap is how the malformed image references (fixed in this pass) went unnoticed.

@@ -29,7 +29,7 @@ git commit -m "chore: bump api submodule to <tag>"
 
 Note `--remote` follows that tag, so it will *not* pull the tip of `main`; to test against unreleased api work, check the submodule out at a SHA directly.
 
-The recorded SHA in the index is what actually builds. The pin only affects the `build:` (local-build) path — a **pulled** deploy uses the `image:` tag, not the submodule — which is exactly why drift here is easy to miss: nothing fails until someone builds locally. Keep the pin **current** (post the self-migrating entrypoint, stellar-api #276); an old pin regresses local builds to manual migrations.
+The recorded SHA in the index is what actually builds. The pin only affects the `build:` (local-build) path — a **pulled** deploy uses the `image:` tag, not the submodule — which is exactly why drift here was easy to miss. `validate` now checks it: `scripts/check-release-pins.sh` fails when a service's image tag, `.gitmodules` `branch` and gitlink disagree (#57). Keep the pin **current** (post the self-migrating entrypoint, stellar-api #276); an old pin regresses local builds to manual migrations.
 
 ## Images: pin a semver, don't ship `:latest`
 
