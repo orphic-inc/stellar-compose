@@ -66,6 +66,10 @@ jobs:
         id: up
         run: |
           set -euo pipefail
+          # Made here, as the runner user, for the TLS smoke's certificate. A
+          # bind-mount source that does not exist yet is created by Docker, and
+          # on Linux that makes it root's, so nothing could be written into it.
+          mkdir -p volumes/proxy-certs
           docker compose up -d
           # The digests say which images a red run was tested against.
           for image in $(docker compose config --images | grep '^ghcr.io/orphic-inc/'); do
@@ -138,9 +142,8 @@ jobs:
         run: |
           set -euo pipefail
           # A self-signed certificate where the README says to put a real one.
-          mkdir -p volumes/proxy-certs
           openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj '/CN=localhost' \
-            -keyout volumes/proxy-certs/privkey.pem -out volumes/proxy-certs/cert.pem 2> /dev/null
+            -keyout volumes/proxy-certs/privkey.pem -out volumes/proxy-certs/cert.pem
           cp volumes/proxy-certs/cert.pem volumes/proxy-certs/chain.pem
           # The README's switch: the TLS config in place of the default one.
           # Compose merges volumes by target, so this replaces that one mount.
