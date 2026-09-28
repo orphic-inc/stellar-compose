@@ -17,6 +17,42 @@ version and is deliberately left untagged rather than given an invented number.
 
 ## [Unreleased]
 
+**Upgrade note: the proxy config moved.** `proxy.nginx.conf`,
+`proxy-tls.nginx.conf` and `dhparam` are gone. If you edited the ui service's
+`volumes:` in `docker-compose.yml`, for example to switch on TLS, that edit
+conflicts with this release. Take this release's `volumes:` block, then redo the
+switch as the README's TLS section now describes: swap the `nginx/site.conf`
+mount for `nginx/site-tls.conf`. A TLS deploy also needs `cert.pem` to be the
+full chain, since `chain.pem` is no longer read. This stack needs a ui image that
+ships `snippets/stellar-ui.conf` (stellar-ui#400), which ui 0.9.9 and later do;
+with an older one, nginx fails to start.
+
+### Changed
+
+- **The proxy config is split by owner**
+  ([#58](https://github.com/orphic-inc/stellar-compose/issues/58)). The ui
+  image's stock `nginx.conf` now runs as shipped, with its `mime.types` include,
+  access log, `sendfile` and keepalive. compose replaces only its server block:
+  - `nginx/site.conf` or `nginx/site-tls.conf`, mounted over
+    `conf.d/default.conf`, arranges two snippets;
+  - `snippets/stellar-ui.conf`, shipped by the ui image
+    ([stellar-ui ADR-0011](https://github.com/orphic-inc/stellar-ui/blob/main/docs/adr/0011-nginx-serving-snippet.md)),
+    serves the bundle: root, gzip, etag and the SPA fallback;
+  - `nginx/api-proxy.conf` is the only `/api/` block.
+
+  The two hand-copied configs this replaces drifted twice (#59, #61). The
+  bundle is **gzipped again**: the ui's serving config never loaded under the
+  old whole-file mount. The hard-coded 4 workers and 4096 connections give way
+  to the stock `auto` workers and 1024 connections per worker.
+- **TLS follows Mozilla's guideline 6.0 (intermediate).** TLS 1.2 and 1.3, the
+  six ECDHE ciphers with no DHE (so `dhparam` goes), and its key-exchange
+  groups, led by the post-quantum hybrid `X25519MLKEM768`. `http2 on` replaces
+  the deprecated `listen … http2`.
+  - **OCSP stapling is dropped**, along with `resolver 127.0.0.1`, which never
+    resolved inside the container. Let's Encrypt ended OCSP on 2025-08-06.
+  - The e2e TLS smoke asserts the `Strict-Transport-Security` header. A
+    plain run asserts the bundle arrives gzipped.
+
 ## [0.9.9] — 2026-09-28
 
 Stack: **api 0.9.9 + ui 0.9.9**

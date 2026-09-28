@@ -89,8 +89,14 @@ Store backups off-host. A destructive migration or a lost volume with no backup 
 
 To serve HTTPS, provide the proxy container with certificates (from [Let's Encrypt](https://letsencrypt.org/) or a commercial issuer):
 
-1. Place `cert.pem` (domain cert), `privkey.pem` (private key), and `chain.pem` (CA chain) in `./volumes/proxy-certs`.
-2. Uncomment the `proxy-tls.nginx.conf` volume mapping and comment the default config mapping in `docker-compose.yml`.
+1. Place `cert.pem` and `privkey.pem` in `./volumes/proxy-certs`. `cert.pem` is the **full chain**, your certificate followed by the intermediates; with Let's Encrypt that is `fullchain.pem`. No separate `chain.pem` is needed, because the config does no OCSP stapling (Let's Encrypt has not run OCSP since August 2025).
+2. In `docker-compose.yml`, swap the `nginx/site.conf` mount for the commented `nginx/site-tls.conf` line beneath it. Both mount at `/etc/nginx/conf.d/default.conf`.
+
+`nginx/site-tls.conf` follows Mozilla's server-side TLS guideline 6.0 (intermediate): TLS 1.2 and 1.3, ECDHE ciphers only, and HSTS. The config is split three ways:
+
+- the ui image ships how the bundle is served (`snippets/stellar-ui.conf`, [stellar-ui ADR-0011](https://github.com/orphic-inc/stellar-ui/blob/main/docs/adr/0011-nginx-serving-snippet.md));
+- `nginx/api-proxy.conf` is the one `/api/` block;
+- `site.conf` and `site-tls.conf` only arrange the two.
 
 ## The korin.pink IRC sidecar (optional)
 

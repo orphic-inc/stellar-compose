@@ -1,7 +1,7 @@
 name: e2e
 
 # The stack as this repo ships it (#57): the pinned stellar-api and stellar-ui
-# images, the ui container's nginx fronting /api/ with proxy.nginx.conf, and
+# images, the ui container's nginx fronting /api/ with nginx/site.conf, and
 # the compose Postgres, set up from the .example templates. stellar-ui's
 # Playwright suite runs against it from the `ui` submodule, which `validate`
 # holds at the same tag as the ui image, so the specs are the ones that
@@ -98,13 +98,27 @@ jobs:
         run: |
           set -euo pipefail
           pinned=$(sed -nE 's#^[[:space:]]*image:[[:space:]]*ghcr\.io/orphic-inc/stellar-api:([^[:space:]]+).*#\1#p' docker-compose.yml)
-          served=$(curl -sf "$API_URL/api/version" | jq -r .version)
+          # nginx refuses to start without the snippet the site includes, which
+          # a ui image older than stellar-ui#400 does not ship.
+          body=$(curl -sf "$API_URL/api/version") || {
+            echo "::error::the proxy at $API_URL did not answer. Does the pinned ui image ship snippets/stellar-ui.conf (stellar-ui#400)? See the stack logs below."
+            exit 1
+          }
+          served=$(echo "$body" | jq -r .version)
           if [ "$served" != "$pinned" ]; then
             echo "::error::the proxy's /api/version answered '$served', but the pin is $pinned"
             exit 1
           fi
           curl -sf "$BASE_URL/" | grep -q '<div id="root"' \
             || { echo "::error::$BASE_URL/ did not serve the ui bundle"; exit 1; }
+          # The ui image's serving snippet gzips; compose's old whole-file
+          # nginx.conf never loaded it (#58).
+          js=$(curl -sf "$BASE_URL/" | grep -oE 'src="/[^"]+\.js"' | head -1 | cut -d'"' -f2)
+          encoding=$(curl -sf -H 'Accept-Encoding: gzip' -o /dev/null -w '%header{content-encoding}' "$BASE_URL$js")
+          if [ "$encoding" != gzip ]; then
+            echo "::error::$js was not gzipped through the proxy (content-encoding '$encoding')"
+            exit 1
+          fi
 
       - name: Install the site and seed the e2e fixtures
         run: |
@@ -144,14 +158,13 @@ jobs:
           # A self-signed certificate where the README says to put a real one.
           openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj '/CN=localhost' \
             -keyout volumes/proxy-certs/privkey.pem -out volumes/proxy-certs/cert.pem
-          cp volumes/proxy-certs/cert.pem volumes/proxy-certs/chain.pem
-          # The README's switch: the TLS config in place of the default one.
-          # Compose merges volumes by target, so this replaces that one mount.
+          # The README's switch: site-tls.conf in place of site.conf. Compose
+          # merges volumes by target, so this replaces that one mount.
           cat > "$RUNNER_TEMP/tls.override.yml" <<'EOF'
           services:
             ui:
               volumes:
-                - ./proxy-tls.nginx.conf:/etc/nginx/nginx.conf:ro,Z
+                - ./nginx/site-tls.conf:/etc/nginx/conf.d/default.conf:ro,Z
           EOF
           # --force-recreate: nginx reads its config only at start, so a container
           # compose judged unchanged would keep serving the old one.
@@ -169,7 +182,7 @@ jobs:
           pinned=$(sed -nE 's#^[[:space:]]*image:[[:space:]]*ghcr\.io/orphic-inc/stellar-api:([^[:space:]]+).*#\1#p' docker-compose.yml)
           served=$(curl -sk https://localhost/api/version | jq -r .version 2> /dev/null || true)
           if [ "$served" != "$pinned" ]; then
-            echo "::error::https://localhost/api/version answered '$served', but the pin is $pinned. Is proxy-tls.nginx.conf passing /api/ to the api's port (#58)?"
+            echo "::error::https://localhost/api/version answered '$served', but the pin is $pinned. Does site-tls.conf include nginx/api-proxy.conf (#58)?"
             exit 1
           fi
           curl -skf https://localhost/ | grep -q '<div id="root"' \
@@ -181,11 +194,21 @@ jobs:
           case "$css_type" in
             text/css*) ;;
             *)
-              echo "::error::https://localhost$css was served as '$css_type', not text/css. Does proxy-tls.nginx.conf include mime.types (#58)?"
+              echo "::error::https://localhost$css was served as '$css_type', not text/css. Is mime.types in scope (#58, stellar-ui ADR-0011)?"
               exit 1
               ;;
           esac
-          echo "TLS: 301 to https, /api/ reaches api $served, bundle served, CSS as $css_type"
+          # HSTS is set on the TLS server; an add_header in the ui snippet
+          # would cancel it for the bundle (stellar-ui ADR-0011).
+          hsts=$(curl -sk -o /dev/null -w '%header{strict-transport-security}' https://localhost/)
+          case "$hsts" in
+            max-age=*) ;;
+            *)
+              echo "::error::https://localhost/ sent no Strict-Transport-Security header ('$hsts')"
+              exit 1
+              ;;
+          esac
+          echo "TLS: 301 to https, /api/ reaches api $served, bundle served, CSS as $css_type, HSTS $hsts"
 
       - name: Upload the Playwright report
         if: failure()
