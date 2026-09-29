@@ -17,6 +17,33 @@ version and is deliberately left untagged rather than given an invented number.
 
 ## [Unreleased]
 
+## [0.9.9] — 2026-09-28
+
+Stack: **api 0.9.9 + ui 0.9.9**
+
+**Upgrade note: back up the database before deploying.** api 0.9.9 runs one
+additive migration, `remote_image_import`: the `remote_images` table and the
+`Imported` asset kind. Once an imported image exists, reverting the pin to 0.9.8
+needs the backup.
+
+**Then run the image backfill before relying on this stack**
+([stellar-api#738](https://github.com/orphic-inc/stellar-api/issues/738)):
+
+```sh
+docker compose exec api node dist/scripts/backfill-remote-images.js
+```
+
+ui 0.9.9 closes the CSP's `img-src`, `font-src` and `connect-src`
+([stellar-ui#402](https://github.com/orphic-inc/stellar-ui/issues/402)), so no
+page loads an image, font or connection from another host. api 0.9.9 imports
+remote images into its asset store and serves them from this origin
+([stellar-api ADR-0051](https://github.com/orphic-inc/stellar-api/blob/main/docs/adr/0051-remote-images-are-imported-on-write.md)).
+Any image written before this release that the backfill has not imported
+renders as its link, or as the surface's default, until it does. The script
+reports what imported and what failed; re-running it is safe.
+
+A member's external stylesheet can no longer load a remote image or font.
+
 ### Added
 
 - **CI runs the stack as it ships**
@@ -308,7 +335,8 @@ release.
 
 - Migrated the database service to PostgreSQL and made ports consistent.
 
-[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.8...HEAD
+[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.9...HEAD
+[0.9.9]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.8...v0.9.9
 [0.9.8]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.7...v0.9.8
 [0.9.7]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.6...v0.9.7
 [0.9.6]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.5...v0.9.6
