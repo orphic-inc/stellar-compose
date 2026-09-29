@@ -17,6 +17,13 @@ version and is deliberately left untagged rather than given an invented number.
 
 ## [Unreleased]
 
+## [0.9.10] — 2026-09-29
+
+Stack: **api 0.9.10 + ui 0.9.10**
+
+api 0.9.10 runs no migrations, and ui 0.9.10 only re-vendors the api contract.
+The upgrade note below is this stack's one operator action.
+
 **Upgrade note: the proxy config moved.** `proxy.nginx.conf`,
 `proxy-tls.nginx.conf` and `dhparam` are gone. If you edited the ui service's
 `volumes:` in `docker-compose.yml`, for example to switch on TLS, that edit
@@ -371,7 +378,8 @@ release.
 
 - Migrated the database service to PostgreSQL and made ports consistent.
 
-[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.9...HEAD
+[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.10...HEAD
+[0.9.10]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.9...v0.9.10
 [0.9.9]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.8...v0.9.9
 [0.9.8]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.7...v0.9.8
 [0.9.7]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.6...v0.9.7
