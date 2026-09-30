@@ -17,6 +17,22 @@ version and is deliberately left untagged rather than given an invented number.
 
 ## [Unreleased]
 
+## [0.9.11] — 2026-09-30
+
+Stack: **api 0.9.11 + ui 0.9.11**
+
+api 0.9.11 runs no migrations, and ui 0.9.11 only re-vendors the api contract.
+No operator action beyond the pin bump.
+
+### Changed
+
+- **Pins stellar-api 0.9.11 and stellar-ui 0.9.11**, in `docker-compose.yml`,
+  the submodule gitlinks and both `.gitmodules` `branch =` lines. The api
+  release completes its guard-coverage work: races that answered `500`, such
+  as two concurrent `/install` requests failing in the seed, now answer a
+  client error or succeed. Its contract adds failure codes on seven operations
+  and changes no success shape.
+
 ## [0.9.10] — 2026-09-29
 
 Stack: **api 0.9.10 + ui 0.9.10**
@@ -378,7 +394,8 @@ release.
 
 - Migrated the database service to PostgreSQL and made ports consistent.
 
-[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.10...HEAD
+[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.11...HEAD
+[0.9.11]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.10...v0.9.11
 [0.9.10]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.9...v0.9.10
 [0.9.9]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.8...v0.9.9
 [0.9.8]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.7...v0.9.8
