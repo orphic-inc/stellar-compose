@@ -17,6 +17,36 @@ version and is deliberately left untagged rather than given an invented number.
 
 ## [Unreleased]
 
+## [0.10.0] — 2026-09-30
+
+Stack: **api 0.10.0 + ui 0.10.0**
+
+api 0.10.0 runs one migration, which the api container applies at boot
+(`prisma migrate deploy`). It grants the new `invites_note` permission to every
+rank that already holds `invites_manage`. Two operator actions, both in
+`.env.api`:
+
+- **Delete `STELLAR_IRC_URL`.** api 0.10.0 ignores it and logs a warning at
+  boot while it is set. `${irc}` now follows `STELLAR_IRC_GUIDE_URL`, which
+  defaults to `${STELLAR_PUBLIC_KB_BASE}/irc`.
+- **Set `STELLAR_FEED_SECRET`** (32+ characters) if your members use Member
+  Feeds. Unset, every feed URL answers `404`, as it always has.
+
+### Changed
+
+- **Pins stellar-api 0.10.0 and stellar-ui 0.10.0**, in `docker-compose.yml`,
+  the submodule gitlinks and both `.gitmodules` `branch =` lines. The release
+  adds an active ratio watch to every member's profile, with the policy status
+  for `ratio_policy_manage`. It also adds "Invited by" and the invite balance on
+  the profile for the invite permissions, the registration log's inviter and
+  same-IP columns, and the `invites_note` permission.
+- **`.env.api.example` lists every variable api 0.10.0 reads** (#66).
+  `STELLAR_IRC_URL` is gone. Added: `STELLAR_FEED_SECRET`, and, as commented
+  defaults, `RANK_PROGRESSION_INTERVAL_MS`, `DISABLE_BACKGROUND_JOBS`,
+  `STELLAR_ASSET_MAX_BYTES`, `STELLAR_IMAGE_IMPORT_DAILY_LIMIT`,
+  `IMAGE_IMPORT_INTERVAL_MS`, `STELLAR_MINIMUM_BOUNTY` and
+  `KORIN_CHANNEL_WEIGHTS`.
+
 ## [0.9.11] — 2026-09-30
 
 Stack: **api 0.9.11 + ui 0.9.11**
@@ -394,7 +424,8 @@ release.
 
 - Migrated the database service to PostgreSQL and made ports consistent.
 
-[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.11...HEAD
+[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.11...v0.10.0
 [0.9.11]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.10...v0.9.11
 [0.9.10]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.9...v0.9.10
 [0.9.9]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.8...v0.9.9
