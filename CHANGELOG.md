@@ -17,6 +17,38 @@ version and is deliberately left untagged rather than given an invented number.
 
 ## [Unreleased]
 
+## [0.10.1] — 2026-10-02
+
+Stack: **api 0.10.1 + ui 0.10.1**
+
+api 0.10.1 runs two migrations, which the api container applies at boot
+(`prisma migrate deploy`). Neither needs operator action:
+
+- **Rank limits:** `personalCollageLimit` and `authorStylesheetLimit` now read
+  `0` as none and `null` as unlimited, like the other rank limits. The
+  migration turns every existing `0` into `null`, so no rank changes behaviour.
+- **The entry rank's image upload:** the rank at level 100 moves from
+  `assetLimit` `0` to `1`, so a new member can upload an avatar (avatars are
+  upload-only from this release). Any other value is left alone.
+
+**Staff edits to the default ranks now survive a restart.** Until this release,
+every container start reset the default ranks (User through SysOp) to their
+seeded permissions, limits, colour and badge, and recreated any default rank or
+promotion rule staff had deleted. From 0.10.1 the seed only fills an empty
+database. Ranks keep whatever the last 0.10.0 boot left them with, so set them
+in the rank editor, which now edits every rank field.
+
+### Changed
+
+- **Pins stellar-api 0.10.1 and stellar-ui 0.10.1**, in `docker-compose.yml`,
+  the submodule gitlinks and both `.gitmodules` `branch =` lines. The release:
+  - fixes every stored image (avatars, donor images and the built-in theme
+    imagery), which reached browsers as JSON and drew nothing;
+  - makes the avatar and donor image fields upload-only, with a preview;
+  - completes the rank editor (image and stylesheet limits, colour and badge);
+  - lets staff delete a release with no contributions.
+- **`.env.api.example` is unchanged:** api 0.10.1 reads no new variables.
+
 ## [0.10.0] — 2026-09-30
 
 Stack: **api 0.10.0 + ui 0.10.0**
@@ -424,7 +456,8 @@ release.
 
 - Migrated the database service to PostgreSQL and made ports consistent.
 
-[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/orphic-inc/stellar-compose/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.11...v0.10.0
 [0.9.11]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.10...v0.9.11
 [0.9.10]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.9...v0.9.10
