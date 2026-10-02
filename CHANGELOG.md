@@ -17,6 +17,28 @@ version and is deliberately left untagged rather than given an invented number.
 
 ## [Unreleased]
 
+## [0.10.2] — 2026-10-02
+
+Stack: **api 0.10.2 + ui 0.10.2**
+
+api 0.10.2 runs no migrations and reads no new variables, so upgrading is the
+image pull alone.
+
+### Changed
+
+- **Pins stellar-api 0.10.2 and stellar-ui 0.10.2**, in `docker-compose.yml`,
+  the submodule gitlinks and both `.gitmodules` `branch =` lines. The release:
+  - makes a community's leader the one who appoints its curators (staff keep
+    the override), and lets a curator step down;
+  - keeps a community's leader among its curators, and lets staff clear a
+    leader;
+  - makes every write in the ui report its failure, where many used to fail
+    silently or look as if they had worked. A failed logout now keeps the
+    session rather than appearing to sign out;
+  - adds member stylesheets (write, share and adopt) and `?notheme=1`, which
+    turns themes off for a tab so a stylesheet can't lock a member out.
+- **`.env.api.example` is unchanged:** api 0.10.2 reads no new variables.
+
 ## [0.10.1] — 2026-10-02
 
 Stack: **api 0.10.1 + ui 0.10.1**
@@ -456,7 +478,8 @@ release.
 
 - Migrated the database service to PostgreSQL and made ports consistent.
 
-[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.10.1...HEAD
+[Unreleased]: https://github.com/orphic-inc/stellar-compose/compare/v0.10.2...HEAD
+[0.10.2]: https://github.com/orphic-inc/stellar-compose/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/orphic-inc/stellar-compose/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.11...v0.10.0
 [0.9.11]: https://github.com/orphic-inc/stellar-compose/compare/v0.9.10...v0.9.11
