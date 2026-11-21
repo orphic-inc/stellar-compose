@@ -42,7 +42,7 @@ services:
     # distro underneath the tag — the drift class that advanced api's base to
     # Alpine 3.23 and crash-looped its Prisma engine (ADR-0001, stellar-api#99).
     # Bump deliberately via a reviewed PR; never back to a floating tag.
-    image: postgres:18.6-alpine3.24
+    image: postgres:19.0-alpine3.24
     restart: always
     env_file:
       - .env.db
